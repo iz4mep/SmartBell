@@ -1,0 +1,184 @@
+esphome:
+  name: "esphome-web-1eb0d8"
+  
+
+esp32:
+  board: nodemcu-32s
+  
+  #board: esp32dev
+  framework:
+    type: arduino
+    
+    
+    
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+
+
+wifi:
+  ssid: "Manual_ssid"
+  password: "Manual_PSW"
+  power_save_mode: LIGHT
+  manual_ip:
+    # Set this to the IP of the ESP
+    static_ip: 192.168.178.59
+    # Set this to the IP address of the router. Often ends with .1
+    gateway: 192.168.178.1
+    # The subnet of the network. 255.255.255.0 works for most home networks.
+    subnet: 255.255.255.0
+
+
+
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esphome-Web-1Eb0D9"
+    password: "ZEV4xixU5dAb"
+
+captive_portal:
+
+time:
+- platform: homeassistant
+  id: my_time
+
+
+sensor:
+  - platform: bme680
+    address: 0x77
+    temperature:
+      name: "BME680 Temperature"
+      
+    pressure:
+      name: "BME680 Pressure"
+    humidity:
+      name: "BME680 Humidity"
+      id: hum
+    gas_resistance:
+      name: "BME680 Gas Resistance"
+      id: g_res
+    
+    update_interval: 60s  
+# comp_gas = log(R_gas[ohm]) + 0.04 log(Ohm)/%rh * hum[%rh]    
+  - platform: template
+    name: "BME680 IAQ"
+    id: IAQ
+    unit_of_measurement: IAQ
+    lambda: 'return log(id(g_res).state) + 0.04 *  id(hum).state;'
+
+
+
+
+
+
+esp32_camera:
+  external_clock:
+    pin: GPIO4
+    frequency: 20MHz
+  i2c_pins:
+    sda: GPIO18
+    scl: GPIO23
+  data_pins: [GPIO34, GPIO13, GPIO26, GPIO35, GPIO39, GPIO38, GPIO37, GPIO36]
+  vsync_pin: GPIO5
+  href_pin: GPIO27
+  pixel_clock_pin: GPIO25
+  resolution: 800x600
+  brightness: 1
+  jpeg_quality: 10
+  max_framerate: 2 fps
+  idle_framerate: 0.1 fps
+
+  vertical_flip: false
+  horizontal_mirror: false
+  
+  # Image settings
+  name: My Camera
+
+
+
+  
+font:
+  - file: gfonts://Helvetica
+    id: helvetica_48
+    size: 48
+  - file: gfonts://Helvetica
+    id: helvetica_24
+    size: 24
+  - file: gfonts://Helvetica
+    id: helvetica_12
+    size: 12
+
+i2c:
+  sda: 18
+  scl: 23
+  scan: true
+  id: bus_a
+  
+
+
+spi:
+  clk_pin: GPIO21
+  mosi_pin: GPIO19
+
+
+text_sensor:
+   - platform: homeassistant
+     id: text_out
+     name: text out
+     entity_id: input_text.text_out
+     internal: true
+
+
+display:
+  - platform: st7789v
+    model: Adafruit Funhouse 240x240
+    cs_pin: GPIO12
+    dc_pin: GPIO15
+    reset_pin: GPIO22
+    backlight_pin: GPIO2
+    update_interval: 10s
+    lambda:  |-
+      
+      it.print(15,50,id(helvetica_48), id(text_out).state.c_str());
+      it.strftime(120, 210, id(helvetica_24), TextAlign::BASELINE_CENTER, "%H:%M", id(my_time).now());
+      
+
+
+
+  
+
+
+
+binary_sensor:
+   - platform: status
+     name: "Cam Status"
+     id: system_status
+
+   - platform: gpio
+     name: "Ring_Button"
+     pin:
+      number: 33
+      mode: INPUT_PULLUP
+
+
+output:
+  - platform: gpio
+    pin: 2
+    id: 'LED_LCD'
+  - platform: gpio
+    pin: 32
+    id: 'LED_CORT'
+switch:
+  - platform: output
+    name: "LCD"
+    output: 'LED_LCD'
+    restore_mode: ALWAYS_OFF
+  - platform: output
+    name: "CORT"
+    output: 'LED_CORT'
+    restore_mode: ALWAYS_OFF
