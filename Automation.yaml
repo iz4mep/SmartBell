@@ -1,0 +1,77 @@
+- id: '1673862576555'
+  alias: Citofono
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.ring_button
+    from: 'off'
+    to: 'on'
+  condition: []
+  action:
+  - service: switch.turn_on
+    data: {}
+    target:
+      entity_id: switch.cort
+  - service: camera.snapshot
+    data:
+      filename: /config/www/ringing.jpg
+    target:
+      entity_id: camera.my_camera
+  - service: input_text.set_value
+    data:
+      value: RINGING....
+    target:
+      entity_id: input_text.text_out
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 0
+      milliseconds: 200
+  - service: switch.turn_on
+    data: {}
+    target:
+      entity_id: switch.lcd
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 0
+      milliseconds: 200
+  - service: notify.mobile_app_ac2003
+    data:
+      message: Ringing
+      title: Qualcuno alla porta
+      data:
+        image: http://XXXXXXXXXXXX:8080/local/ringing.jpg
+        ttl: 0
+        priority: high
+        clickAction: /lovelace/ring
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
+  - service: input_boolean.turn_off
+    data: {}
+    target:
+      entity_id: input_boolean.ringing
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 5
+      milliseconds: 0
+  - service: switch.turn_off
+    data: {}
+    target:
+      entity_id:
+      - switch.lcd
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 30
+      milliseconds: 0
+  - service: switch.turn_off
+    data: {}
+    target:
+      entity_id: switch.cort
+  mode: single
